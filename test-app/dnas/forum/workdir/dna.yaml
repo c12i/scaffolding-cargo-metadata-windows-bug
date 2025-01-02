@@ -1,0 +1,10 @@
+manifest_version: '1'
+name: forum
+integrity:
+  network_seed: null
+  properties: null
+  origin_time: 1735913691580049
+  zomes: []
+coordinator:
+  zomes: []
+lineage: []

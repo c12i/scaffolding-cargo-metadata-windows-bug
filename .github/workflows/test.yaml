@@ -1,11 +1,12 @@
 name: Test Windows Scaffolding Issue
 
 on:
-  workflow_dispatch:
+  push:
+    branches: [main]
 
 jobs:
   test-windows-scaffolding:
-    runs-on: windows-latest
+    runs-on: windows-2019
 
     steps:
       - name: Checkout repository
@@ -16,28 +17,16 @@ jobs:
         with:
           targets: wasm32-unknown-unknown
 
-      - name: Cache cargo dependencies
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-cargo-
+      - uses: Swatinem/rust-cache@v2
 
       - name: Install holochain_scaffolding_cli
-        run: cargo install holochain_scaffolding_cli
+        run: cargo install holochain_scaffolding_cli --version 0.500.0-dev.1
 
       - name: Test scaffolding commands
         run: |
-          mkdir test-reproduction
-          cd test-reproduction
-          hc scaffold web-app test-app
-          cd test-app
-          hc scaffold dna test-dna
-          hc scaffold zome coordinator test-zome
+          chdir test-app
+          hc-scaffold zome posts --integrity dnas\forum\zomes\integrity\ --coordinator dnas\forum\zomes\coordinator\
+          tree /f
         shell: pwsh
 
       - name: Upload error logs if failure
