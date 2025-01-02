@@ -1,0 +1,49 @@
+name: Test Windows Scaffolding Issue
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-windows-scaffolding:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Cache cargo dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+
+      - name: Install holochain_scaffolding_cli
+        run: cargo install holochain_scaffolding_cli
+
+      - name: Test scaffolding commands
+        run: |
+          mkdir test-reproduction
+          cd test-reproduction
+          hc scaffold web-app test-app
+          cd test-app
+          hc scaffold dna test-dna
+          hc scaffold zome coordinator test-zome
+        shell: pwsh
+
+      - name: Upload error logs if failure
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: error-logs
+          path: test-reproduction/test-app/
+          if-no-files-found: warn
